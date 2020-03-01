@@ -1,0 +1,25 @@
+{
+  "name": "ingelby/rfqueue",
+  "description": "Fast Yii2 Queue processor",
+  "type": "library",
+  "license": "Proprietary",
+  "authors": [
+    {
+      "name": "George Hallam",
+      "email": "george.hallam@ingelby.com.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "ingelby\\rfqueue\\": "src"
+    }
+  },
+  "require": {
+    "php": ">=7.0.0",
+    "php-amqplib/php-amqplib": "*"
+  },
+  "require-dev": {
+  },
+  "repositories": [
+  ]
+}
