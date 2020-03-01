@@ -4,7 +4,7 @@ namespace ingelby\rfqueue\component;
 
 
 use ingelby\rfqueue\component\exceptions\RfQueueConfigurationException;
-use console\workers\WorkerInterface;
+use ingelby\rfqueue\workers\WorkerInterface;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use yii\base\Component;
