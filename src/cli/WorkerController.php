@@ -24,15 +24,20 @@ class WorkerController extends Controller implements BootstrapInterface
     }
 
     /**
-     * @param string $queueName
-     * @param string $worker fully qualifying class name
-     * @param int    $prefetch
+     * @param string      $queueName
+     * @param string      $worker fully qualifying class name
+     * @param int         $prefetch
+     * @param string|null $failoverDirectory full path of the failover directory
      * @throws Exception
      * @throws \ErrorException
      */
-    public function actionListen($queueName, $worker, $prefetch = 10)
+    public function actionListen($queueName, $worker, $prefetch = 10, $failoverDirectory = null)
     {
         \Yii::info('Starting worker: ' . $worker . ' listening to queue: ' . $queueName);
+
+        if (null !== $failoverDirectory && !is_dir($failoverDirectory)) {
+            throw new Exception($failoverDirectory . ' is not a valid directory');
+        }
 
         if (!class_exists($worker)) {
             throw new Exception($worker . ' doest not exist');
@@ -40,7 +45,7 @@ class WorkerController extends Controller implements BootstrapInterface
 
         $channel = \Yii::$app->rfQueue->getChannel();
         $channel->basic_qos(null, $prefetch, null);
-        \Yii::$app->rfQueue->basicConsume($queueName, new $worker());
+        \Yii::$app->rfQueue->basicConsume($queueName, new $worker($failoverDirectory));
 
         while ($channel->is_consuming()) {
             $channel->wait();
