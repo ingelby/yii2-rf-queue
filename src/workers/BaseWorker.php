@@ -20,6 +20,19 @@ abstract class BaseWorker implements WorkerInterface
     protected $failOverDirectory;
 
     /**
+     * @param array $attributes
+     */
+    public static function selfPublish(array $attributes = []): void
+    {
+        \Yii::$app->rfQueue->basicPublish(
+            new RfQueueMessage(
+                static::queueName(),
+                $attributes
+            )
+        );
+    }
+
+    /**
      * BaseWorker constructor.
      *
      * @param string|null $failOverDirectory
@@ -34,8 +47,15 @@ abstract class BaseWorker implements WorkerInterface
 
     /**
      * @return string
+     * @deprecated
+     * @see static::getQueueName()
      */
     abstract public function queueName(): string;
+
+    /**
+     * @return string
+     */
+    abstract public static function getQueueName(): string;
 
     /**
      * @param array $message

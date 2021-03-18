@@ -105,14 +105,14 @@ class RfQueue extends Component
      */
     public function basicPublish(RfQueueMessage $message)
     {
-        \Yii::info('Publishing to :' . $message->getTargetQueue());
+        \Yii::info('Publishing to: ' . $message->getTargetQueue());
         $this->channel->basic_publish(
             $message->generateAMQPMessage(),
             '',
             $this->queuePrefix . $message->getTargetQueue()
         );
 
-        \Yii::info('Message published' . $message->getTargetQueue());
+        \Yii::info('Message published ' . $message->getTargetQueue());
     }
 
     /**
