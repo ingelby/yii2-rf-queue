@@ -7,6 +7,7 @@ namespace ingelby\rfqueue\workers;
 use ingelby\rfqueue\component\RfQueue;
 use ingelby\rfqueue\component\RfQueueMessage;
 use ingelby\rfqueue\workers\exceptions\DeadQueuePublishException;
+use ingelby\rfqueue\workers\exceptions\MySqlGoneAwayException;
 use ingelby\rfqueue\workers\exceptions\WorkerException;
 use PhpAmqpLib\Channel\AMQPChannel;
 use PhpAmqpLib\Message\AMQPMessage;
@@ -78,25 +79,28 @@ abstract class BaseWorker implements WorkerInterface
                 throw new WorkerException('Unable to json decode: ' . $exception->getMessage());
             }
 
-            $this->run($data);
-
-        } catch (WorkerException $exception) {
-            Yii::error('Unable to process message: ' . $exception->getMessage(), $this->logCategory);
-
-            if (false !== strpos($exception->getMessage(), 'SQLSTATE[HY000]')) {
-                Yii::error('MySql has gone away, attempting to open and close it');
-                \Yii::$app->db->close();
-                try {
-                    \Yii::$app->db->open();
-                    $this->retry($message->body);
-                    Yii::info('Connection reopened, message re-queued');
-                } catch (\Exception  $exception) {
-                    Yii::error('Unable to reopen connection to database: ' . $exception->getMessage());
-                    $this->writeToDead($message);
+            try {
+                $this->run($data);
+            } catch (\Throwable $exception) {
+                if (false !== strpos($exception->getMessage(), 'SQLSTATE[HY000]')) {
+                    throw new MySqlGoneAwayException('Connection to MYSQL gone away', true, 0, $exception);
                 }
-            } else {
+                throw $exception;
+            }
+
+        } catch (MySqlGoneAwayException $exception) {
+            Yii::error('Unable to process message: ' . $exception->getMessage(), $this->logCategory);
+            try {
+                \Yii::$app->db->open();
+                $this->retry($message->body);
+                Yii::info('Connection reopened, message re-queued');
+            } catch (\Exception  $exception) {
+                Yii::error('Unable to reopen connection to database: ' . $exception->getMessage());
                 $this->writeToDead($message);
             }
+        } catch (WorkerException $exception) {
+            Yii::error('Unable to process message: ' . $exception->getMessage(), $this->logCategory);
+            $this->writeToDead($message);
         } catch (\Throwable $exception) {
             $error = [
                 'message'  => $exception->getMessage(),
