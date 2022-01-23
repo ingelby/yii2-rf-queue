@@ -27,7 +27,7 @@ abstract class BaseWorker implements WorkerInterface
     {
         \Yii::$app->rfQueue->basicPublish(
             new RfQueueMessage(
-                static::queueName(),
+                static::getQueueName(),
                 $attributes
             )
         );
